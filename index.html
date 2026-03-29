@@ -70,6 +70,7 @@ function PlaveAdmin() {
   const [scriptPreviewData, setScriptPreviewData] = useState([]);
   const [hlPreviewData, setHlPreviewData] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [formData, setFormData] = useState({ date: "", title: "", members: [], link: "" });
   const [scriptText, setScriptText] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -219,6 +220,24 @@ function PlaveAdmin() {
             </button>
           ))}
         </div>
+
+        <button onClick={async () => {
+          if (syncing) return;
+          setSyncing(true);
+          try {
+            const res = await fetch(WORKER + "/", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ action: "syncToArchive" }) }).then(r => r.json());
+            if (res.ok) alert("동기화 완료! " + res.count + "개 반영됨");
+            else alert("동기화 실패: " + (res.detail || res.message));
+          } catch(e) { alert("동기화 실패: " + e.message); }
+          setSyncing(false);
+        }} style={{
+          background: syncing ? "#1a1a22" : "#0f1f14", border: "1px solid #1a3a22",
+          borderRadius: 8, padding: "7px 14px", fontSize: 11, fontWeight: 700,
+          color: syncing ? "#555" : "#4ade80", cursor: "pointer", fontFamily: "inherit",
+          whiteSpace: "nowrap", marginLeft: 8,
+        }}>
+          {syncing ? "동기화 중..." : "🔄 아카이브 동기화"}
+        </button>
       </div>
 
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "28px 24px" }}>
