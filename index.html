@@ -104,9 +104,9 @@ function PlaveAdmin() {
     setLoading(true);
     try {
       const [sessRes, scriptRes, hlRes] = await Promise.all([
-        fetch(WORKER + "/?action=getSessions").then(r => r.json()),
-        fetch(WORKER + "/?action=getScriptIds").then(r => r.json()),
-        fetch(WORKER + "/?action=getHighlightIds").then(r => r.json()),
+        fetch(WORKER + "/?_=" + Date.now() + "&action=getSessions").then(r => r.json()),
+        fetch(WORKER + "/?_=" + Date.now() + "&action=getScriptIds").then(r => r.json()),
+        fetch(WORKER + "/?_=" + Date.now() + "&action=getHighlightIds").then(r => r.json()),
       ]);
       if (sessRes.ok) {
         const mapped = sessRes.sessions.map(s => ({
@@ -584,15 +584,18 @@ function PlaveAdmin() {
             {selectedSession && (
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
                 <button onClick={() => {
-                  const prev = sessions.find(s => s.no === selectedSession.no - 1);
-                  if (prev) { setSelectedSession(prev); setSearchByNo(String(prev.no)); }
+                  const sorted = [...sessions].sort((a,b) => a.no - b.no);
+                  const idx = sorted.findIndex(s => s.no === selectedSession.no);
+                  if (idx > 0) { setSelectedSession(sorted[idx-1]); setSearchByNo(String(sorted[idx-1].no)); setExpandScript(false); setScriptPreviewData([]); }
                 }} style={{
                   background: "#0f0f12", border: "1px solid #1a1a1f", borderRadius: 8,
                   padding: "8px 14px", color: "#666", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                 }}>← 이전</button>
+                <span style={{ fontSize: 12, color: "#444", alignSelf: "center" }}>{selectedSession.no} / {sessions.length}</span>
                 <button onClick={() => {
-                  const next = sessions.find(s => s.no === selectedSession.no + 1);
-                  if (next) { setSelectedSession(next); setSearchByNo(String(next.no)); }
+                  const sorted = [...sessions].sort((a,b) => a.no - b.no);
+                  const idx = sorted.findIndex(s => s.no === selectedSession.no);
+                  if (idx < sorted.length - 1) { setSelectedSession(sorted[idx+1]); setSearchByNo(String(sorted[idx+1].no)); setExpandScript(false); setScriptPreviewData([]); }
                 }} style={{
                   background: "#0f0f12", border: "1px solid #1a1a1f", borderRadius: 8,
                   padding: "8px 14px", color: "#666", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
@@ -718,7 +721,7 @@ function PlaveAdmin() {
                       <div style={{ display: "flex", gap: 6 }}>
                         <button onClick={async () => {
                           if (!expandScript && scriptPreviewData.length === 0) {
-                            const res = await fetch(WORKER + "/?action=getScripts&session_id=" + selectedSession.id).then(r=>r.json());
+                            const res = await fetch(WORKER + "/?_=" + Date.now() + "&action=getScripts&session_id=" + selectedSession.id).then(r=>r.json());
                             if (res.ok) setScriptPreviewData(res.scripts.map((s,i)=>({i:i+1,tc:s.timecode,t:s.content})));
                           }
                           setExpandScript(!expandScript);
@@ -989,7 +992,26 @@ function PlaveAdmin() {
 
             {hlSession && (
               <>
-                {/* 세션 정보 카드 */}
+                {/* 이전/다음 버튼 */}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                  <button onClick={() => {
+                    const sorted = [...sessions].sort((a,b) => a.no - b.no);
+                    const idx = sorted.findIndex(s => s.no === hlSession.no);
+                    if (idx > 0) { setHlSession(sorted[idx-1]); setHlSearchByNo(String(sorted[idx-1].no)); setExpandHl(false); setHlPreviewData([]); }
+                  }} style={{
+                    background: "#0f0f12", border: "1px solid #1a1a1f", borderRadius: 8,
+                    padding: "8px 14px", color: "#666", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                  }}>← 이전</button>
+                  <span style={{ fontSize: 12, color: "#444", alignSelf: "center" }}>{hlSession.no} / {sessions.length}</span>
+                  <button onClick={() => {
+                    const sorted = [...sessions].sort((a,b) => a.no - b.no);
+                    const idx = sorted.findIndex(s => s.no === hlSession.no);
+                    if (idx < sorted.length - 1) { setHlSession(sorted[idx+1]); setHlSearchByNo(String(sorted[idx+1].no)); setExpandHl(false); setHlPreviewData([]); }
+                  }} style={{
+                    background: "#0f0f12", border: "1px solid #1a1a1f", borderRadius: 8,
+                    padding: "8px 14px", color: "#666", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                  }}>다음 →</button>
+                </div>
                 <div style={{
                   background: "#0f0f12", border: "1px solid #1a1a1f", borderRadius: 14,
                   padding: "18px 22px", marginBottom: 20,
@@ -1026,7 +1048,7 @@ function PlaveAdmin() {
                       <div style={{ display: "flex", gap: 6 }}>
                         <button onClick={async () => {
                           if (!expandHl && hlPreviewData.length === 0) {
-                            const res = await fetch(WORKER + "/?action=getHighlights&session_id=" + hlSession.id).then(r=>r.json());
+                            const res = await fetch(WORKER + "/?_=" + Date.now() + "&action=getHighlights&session_id=" + hlSession.id).then(r=>r.json());
                             if (res.ok) setHlPreviewData(res.highlights.map((h,i)=>({i:i+1,tc:h.timecode||"",t:h.content,type:h.type==="section"?"section":"hl"})));
                           }
                           setExpandHl(!expandHl);
