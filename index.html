@@ -724,8 +724,8 @@ function PlaveAdmin() {
   const switchSidebar = (key) => {
     setSidebarType(key); setActiveTab("list"); clearSession();
     setFilter("all"); setSortOrder("desc"); setSelectedSong(null); setSongEditMode(false);
-    // 발매곡 진입 시 완료 숨기기는 항상 OFF (전체 곡 보이게)
-    if (key === "song") setHideDone(false);
+    // 발매곡/커버곡 진입 시 완료 숨기기는 항상 OFF (전체 곡 보이게)
+    if (key === "song" || key === "cover") setHideDone(false);
   };
 
   const toggleNa = async (tabKey) => {
